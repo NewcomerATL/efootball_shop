@@ -1,7 +1,7 @@
 # efootball_shop
-# Anderson Tirza Liman
-# 2406355893
-# Kelas B
+- Anderson Tirza Liman
+- 2406355893
+- Kelas B
 
 ---
 
@@ -62,9 +62,9 @@ Child widget berada di dalam parent, mengikuti aturan tata letak dan perilaku ya
 Pada contoh struktur hierarki di atas, analisisnya adalah sebagai berikut:
 - Scaffold bertindak sebagai parent utama yang mengatur keseluruhan halaman.
 
-- AppBar, Column, dan Row adalah child di bawahnya.
+- AppBar, Column, GridView dan Row adalah child di bawahnya.
 
-- Masing-masing InfoCard juga bisa menjadi parent bagi elemen lainnya.
+- Masing-masing InfoCard dan ItemCard juga bisa menjadi parent bagi elemen lainnya.
 
 # 2. Widget yang Digunakan dan Fungsinya
 
