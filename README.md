@@ -7,8 +7,17 @@
 
 ## 1. Widget Tree dan Hubungan Parent–Child
 
-Dalam Flutter, **semua elemen adalah widget** — mulai dari teks, tombol, hingga layout.  
-Widget tersusun secara hierarkis seperti **pohon (Widget Tree)** di mana setiap widget dapat memiliki **parent** (induk) dan **child** (anak).
+Widget tree adalah representasi logis dari seluruh struktur antarmuka pengguna (UI) di aplikasi Flutter.
+Setiap elemen visual—mulai dari tombol (Button), teks (Text), hingga tata letak (Column, Row, GridView)—semuanya merupakan widget, dan setiap widget menempati posisi tertentu di dalam pohon tersebut.
+
+Menurut materi kuliah Intro to Dart Programming and Flutter Framework (slide 33), "The widget tree is the logical representation of all the UI’s widgets. It is computed during layout and used during rendering and hit testing."
+Artinya, Flutter membangun tampilan layar berdasarkan pohon widget ini:
+
+- Layouting → menentukan ukuran dan posisi widget.
+
+- Rendering → menggambar tampilan ke layar.
+
+- Hit testing → mendeteksi interaksi pengguna seperti tap atau drag.
 
 Contoh kode:
 ```dart
@@ -44,6 +53,19 @@ Scaffold
            └── ItemCard
 ```
 
+Hubungan antar widget diatur dalam bentuk hierarki induk–anak (parent–child):
+
+Parent widget adalah widget yang berisi atau mengatur satu atau lebih child widget.
+
+Child widget berada di dalam parent, mengikuti aturan tata letak dan perilaku yang ditentukan oleh parent.
+
+Pada contoh struktur hierarki di atas, analisisnya adalah sebagai berikut:
+- Scaffold bertindak sebagai parent utama yang mengatur keseluruhan halaman.
+
+- AppBar, Column, dan Row adalah child di bawahnya.
+
+- Masing-masing InfoCard juga bisa menjadi parent bagi elemen lainnya.
+
 # 2. Widget yang Digunakan dan Fungsinya
 
 | Widget                      | Fungsi                                                                    |
@@ -74,13 +96,13 @@ Scaffold
 MaterialApp adalah titik awal (root widget) dari aplikasi Flutter berbasis Material Design.
 Beberapa fungsi utamanya:
 
-Menyediakan tema global (ThemeData, ColorScheme).
+- Menyediakan tema global (ThemeData, ColorScheme).
 
-Mengatur navigasi antar halaman (home, routes).
+- Mengatur navigasi antar halaman (home, routes).
 
-Menentukan judul aplikasi (title).
+- Menentukan judul aplikasi (title).
 
-Mendukung localization dan debug banner.
+- Mendukung localization dan debug banner.
 
 Alasan dirinya menjadi root ialah karena semua widget di bawahnya membutuhkan akses ke context MaterialApp untuk menerapkan tema, navigasi, dan tampilan khas Material Design.
 
@@ -104,13 +126,13 @@ Keterangan: context digunakan untuk mengambil warna utama (primary) dari tema ap
 
 Fungsi BuildContext:
 
-Mengakses tema global (Theme.of(context))
+- Mengakses tema global (Theme.of(context))
 
-Menampilkan SnackBar (ScaffoldMessenger.of(context).showSnackBar)
+- Menampilkan SnackBar (ScaffoldMessenger.of(context).showSnackBar)
 
-Navigasi antar halaman (Navigator.of(context).push)
+- Navigasi antar halaman (Navigator.of(context).push)
 
-Digunakan di metode build(BuildContext context) untuk membangun UI.
+- Digunakan di metode build(BuildContext context) untuk membangun UI.
 
 # 6. Hot Reload vs Hot Restart
 
