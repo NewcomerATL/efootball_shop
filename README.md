@@ -1,4 +1,4 @@
-# efootball_shop
+# eFootball Shop - Flutter
 - Anderson Tirza Liman
 - 2406355893
 - Kelas B
