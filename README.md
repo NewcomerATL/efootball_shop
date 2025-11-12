@@ -1,10 +1,11 @@
-# eFootball Shop - Flutter
+# eFootball Shop - Fl3utter
 - Anderson Tirza Liman
 - 2406355893
 - Kelas B
 
 ---
 
+# Tugas 1
 ## 1. Widget Tree dan Hubungan Parent–Child
 
 Widget tree adalah representasi logis dari seluruh struktur antarmuka pengguna (UI) di aplikasi Flutter.
@@ -66,7 +67,7 @@ Pada contoh struktur hierarki di atas, analisisnya adalah sebagai berikut:
 
 - Masing-masing InfoCard dan ItemCard juga bisa menjadi parent bagi elemen lainnya.
 
-# 2. Widget yang Digunakan dan Fungsinya
+## 2. Widget yang Digunakan dan Fungsinya
 
 | Widget                      | Fungsi                                                                    |
 | --------------------------- | ------------------------------------------------------------------------- |
@@ -91,7 +92,7 @@ Pada contoh struktur hierarki di atas, analisisnya adalah sebagai berikut:
 | `ScaffoldMessenger`         | Mengatur SnackBar agar muncul di Scaffold aktif.                          |
 | `MediaQuery`                | Mengambil ukuran layar untuk layout responsif.                            |
 
-# 3. Fungsi MaterialApp dan Alasan Menjadi Widget Root
+## 3. Fungsi MaterialApp dan Alasan Menjadi Widget Root
 
 MaterialApp adalah titik awal (root widget) dari aplikasi Flutter berbasis Material Design.
 Beberapa fungsi utamanya:
@@ -106,7 +107,7 @@ Beberapa fungsi utamanya:
 
 Alasan dirinya menjadi root ialah karena semua widget di bawahnya membutuhkan akses ke context MaterialApp untuk menerapkan tema, navigasi, dan tampilan khas Material Design.
 
-# 4. Perbedaan StatelessWidget dan StatefulWidget
+## 4. Perbedaan StatelessWidget dan StatefulWidget
 | Aspek       | StatelessWidget                                       | StatefulWidget                                          |
 | ----------- | ----------------------------------------------------- | ------------------------------------------------------- |
 | Data        | Tidak berubah (immutable)                             | Dapat berubah selama runtime                            |
@@ -114,7 +115,7 @@ Alasan dirinya menjadi root ialah karena semua widget di bawahnya membutuhkan ak
 | Cocok untuk | UI statis (teks, ikon, layout)                        | UI dinamis (counter, form, animasi)                     |
 | Contoh      | `Text`, `Icon`, `InfoCard`                            | `Checkbox`, `Slider`, `TextField`                       |
 
-# 5. BuildContext dan Peranan Pentingnya
+## 5. BuildContext dan Peranan Pentingnya
 BuildContext merepresentasikan posisi sebuah widget di dalam Widget Tree.
 Ia digunakan Flutter untuk mengetahui di mana widget itu berada dan untuk mengakses data dari parent widget.
 
@@ -134,7 +135,7 @@ Fungsi BuildContext:
 
 - Digunakan di metode build(BuildContext context) untuk membangun UI.
 
-# 6. Hot Reload vs Hot Restart
+## 6. Hot Reload vs Hot Restart
 
 | Fitur       | Hot Reload                              | Hot Restart                                        |
 | ----------- | --------------------------------------- | -------------------------------------------------- |
@@ -142,3 +143,38 @@ Fungsi BuildContext:
 | State       | **Dipertahankan**                       | **Direset ke awal**                                |
 | Kecepatan   | Sangat cepat                            | Lebih lambat                                       |
 | Cocok untuk | Perubahan tampilan, layout, warna       | Perubahan variabel global, inisialisasi ulang data |
+
+# Tugas 2
+## 1. Perbedaan Navigator.push() dan Navigator.pushReplacement()
+
+- Navigator.push() menambahkan halaman baru di atas stack navigasi tanpa menghapus halaman sebelumnya. Saat pengguna menekan tombol back, ia akan kembali ke halaman sebelumnya.
+Contoh penggunaan: Saat membuka form tambah produk dari halaman utama, agar pengguna bisa kembali ke beranda setelah menyimpan data.
+
+- Navigator.pushReplacement() mengganti halaman saat ini dengan halaman baru, sehingga halaman sebelumnya dihapus dari stack.
+Contoh penggunaan: Saat menekan menu “Home” di Drawer, agar halaman utama menggantikan halaman lain tanpa menumpuk di stack, menjaga navigasi tetap efisien.
+
+## 2. Pemanfaatan Hierarchy Widget (Scaffold, AppBar, Drawer)
+
+- Struktur utama aplikasi dibangun menggunakan Scaffold untuk menyediakan kerangka halaman yang konsisten.
+
+- AppBar digunakan sebagai judul dan identitas tiap halaman seperti “Football Shop” atau “Tambah Produk”.
+
+- Drawer digunakan untuk navigasi global ke halaman utama dan form produk, menjaga konsistensi tampilan dan pengalaman pengguna di seluruh halaman.
+
+Dengan hierarki ini, setiap halaman terlihat teratur dan mudah dinavigasi tanpa perlu menulis ulang struktur dasar.
+
+## 3. Kelebihan Layout Widget (Padding, SingleChildScrollView, ListView)
+
+- Padding memberi jarak antar elemen agar tampilan rapi dan mudah dibaca.
+
+- SingleChildScrollView memungkinkan form panjang untuk digulir tanpa overflow.
+
+- ListView efisien untuk menampilkan daftar elemen seperti item produk.
+
+- Contoh: Pada halaman form tambah produk, Padding digunakan di setiap TextFormField, sedangkan seluruh form dibungkus SingleChildScrollView agar tetap bisa diakses pada layar kecil.
+
+## 4. Penyesuaian Warna Tema untuk Identitas Visual
+
+Aplikasi eFootball Shop menggunakan skema warna biru dan putih sebagai warna utama untuk konsistensi visual yang mencerminkan kepercayaan dan profesionalisme—identik dengan dunia olahraga.
+
+Warna ini diterapkan secara konsisten pada AppBar, DrawerHeader, dan tombol utama (ElevatedButton) melalui ThemeData di MaterialApp, sehingga seluruh halaman terasa seragam dan memiliki identitas brand yang kuat.
