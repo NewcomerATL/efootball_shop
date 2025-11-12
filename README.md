@@ -5,7 +5,7 @@
 
 ---
 
-# Tugas 1
+# Tugas 7
 ## 1. Widget Tree dan Hubungan Parent–Child
 
 Widget tree adalah representasi logis dari seluruh struktur antarmuka pengguna (UI) di aplikasi Flutter.
@@ -144,37 +144,163 @@ Fungsi BuildContext:
 | Kecepatan   | Sangat cepat                            | Lebih lambat                                       |
 | Cocok untuk | Perubahan tampilan, layout, warna       | Perubahan variabel global, inisialisasi ulang data |
 
-# Tugas 2
-## 1. Perbedaan Navigator.push() dan Navigator.pushReplacement()
+# Tugas 8
 
-- Navigator.push() menambahkan halaman baru di atas stack navigasi tanpa menghapus halaman sebelumnya. Saat pengguna menekan tombol back, ia akan kembali ke halaman sebelumnya.
-Contoh penggunaan: Saat membuka form tambah produk dari halaman utama, agar pengguna bisa kembali ke beranda setelah menyimpan data.
+## 1. Perbedaan `Navigator.push()` dan `Navigator.pushReplacement()`
 
-- Navigator.pushReplacement() mengganti halaman saat ini dengan halaman baru, sehingga halaman sebelumnya dihapus dari stack.
-Contoh penggunaan: Saat menekan menu “Home” di Drawer, agar halaman utama menggantikan halaman lain tanpa menumpuk di stack, menjaga navigasi tetap efisien.
+### `Navigator.push()`
+Metode push menambahkan halaman baru di atas stack navigasi tanpa menghapus halaman sebelumnya.  
+Artinya, pengguna masih bisa kembali ke halaman sebelumnya menggunakan tombol Back.
+
+#### 💡 Contoh penggunaan dalam aplikasi:
+Pada tombol **“Add Product”** di `menu.dart`:
+
+```dart
+ElevatedButton(
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ProductFormPage()),
+    );
+  },
+  child: const Text('Add Product'),
+),
+```
+
+Pada konteks tersebut, Navigator.push() digunakan agar pengguna bisa membuka form penambahan produk dan kembali ke halaman utama setelah selesai.
+
+### `Navigator.pushReplacement()`
+
+Berbeda dengan push(), metode ini mengganti halaman saat ini dengan halaman baru.
+Halaman lama dihapus dari stack, sehingga pengguna tidak dapat kembali ke halaman sebelumnya.
+
+#### 💡 Contoh penggunaan dalam aplikasi:
+Pada navigasi dari `left_drawer.dart` menuju halaman utama (MyHomePage):
+
+```dart
+onTap: () {
+  Navigator.pop(context); // Tutup drawer terlebih dahulu
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => const MyHomePage()),
+  );
+},
+```
+Penggunaan pushReplacement() adalah benar dan tepat karena setelah pengguna berpindah halaman melalui Drawer, mereka tidak perlu kembali ke halaman sebelumnya dengan tombol Back.
 
 ## 2. Pemanfaatan Hierarchy Widget (Scaffold, AppBar, Drawer)
 
-- Struktur utama aplikasi dibangun menggunakan Scaffold untuk menyediakan kerangka halaman yang konsisten.
+Aplikasi Football Shop memanfaatkan hierarki widget Flutter untuk menciptakan struktur halaman yang konsisten:
 
-- AppBar digunakan sebagai judul dan identitas tiap halaman seperti “Football Shop” atau “Tambah Produk”.
+```dart
+Scaffold(
+  appBar: AppBar(
+    title: const Text('Football Shop'),
+    backgroundColor: Colors.green,
+  ),
+  drawer: const LeftDrawer(),
+  body: const MenuPage(),
+);
+```
+- Scaffold menjadi kerangka utama setiap halaman; Komponen tersebut menyediakan struktur umum: AppBar, body, Drawer, FloatingActionButton, dsb.
 
-- Drawer digunakan untuk navigasi global ke halaman utama dan form produk, menjaga konsistensi tampilan dan pengalaman pengguna di seluruh halaman.
+- AppBar berfungsi sebagai header yang menampilkan judul halaman dan konsisten di setiap tampilan.
 
-Dengan hierarki ini, setiap halaman terlihat teratur dan mudah dinavigasi tanpa perlu menulis ulang struktur dasar.
+- Drawer (left_drawer.dart) berisi menu navigasi ke berbagai halaman aplikasi seperti Home, Add Product, atau Product List.
+
+Dengan pendekatan tersebut, semua halaman (misalnya MenuPage, ProductFormPage) memiliki tampilan yang seragam dan mudah dinavigasi.
+
 
 ## 3. Kelebihan Layout Widget (Padding, SingleChildScrollView, ListView)
 
-- Padding memberi jarak antar elemen agar tampilan rapi dan mudah dibaca.
+Ketiga widget ini digunakan untuk menjaga kenyamanan tampilan form pada berbagai ukuran layar dan menghindari overflow.
 
-- SingleChildScrollView memungkinkan form panjang untuk digulir tanpa overflow.
+```dart
+body: SingleChildScrollView(
+  child: Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: Column(
+      children: [
+        TextField(
+          decoration: const InputDecoration(
+            labelText: 'Product Name',
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          decoration: const InputDecoration(
+            labelText: 'Price',
+          ),
+        ),
+        const SizedBox(height: 12),
+        ElevatedButton(
+          onPressed: () {
+            // Logic penambahan produk
+            Navigator.pop(context); // kembali ke MenuPage
+          },
+          child: const Text('Submit'),
+        ),
+      ],
+    ),
+  ),
+),
+```
 
-- ListView efisien untuk menampilkan daftar elemen seperti item produk.
+Adapun beberapa kelebihannya antara lain:
+- Padding: Memberi jarak di tepi layar agar konten tidak menempel pada pinggir.
 
-- Contoh: Pada halaman form tambah produk, Padding digunakan di setiap TextFormField, sedangkan seluruh form dibungkus SingleChildScrollView agar tetap bisa diakses pada layar kecil.
+- SingleChildScrollView: Membuat halaman dapat di-scroll saat keyboard muncul atau layar kecil.
+
+- ListView (jika digunakan): Lebih efisien saat menampilkan daftar produk dari data dinamis, misalnya di halaman utama menu.dart.
 
 ## 4. Penyesuaian Warna Tema untuk Identitas Visual
 
-Aplikasi eFootball Shop menggunakan skema warna biru dan putih sebagai warna utama untuk konsistensi visual yang mencerminkan kepercayaan dan profesionalisme—identik dengan dunia olahraga.
+Semua warna tema disesuaikan melalui **Theme Data** dalam **MaterialApp**.
+Pada aplikasi ini, kodenya adalah:
+``` dart
+MaterialApp(
+  title: 'Flutter Demo',
+  theme: ThemeData(
+    colorScheme: ColorScheme.fromSwatch(
+      primarySwatch: Colors.blue,
+    ).copyWith(secondary: Colors.blueAccent[400]),
+  ),
+  home: MyHomePage(),
+);
+```
+ThemeData digunakan untuk global styling
 
-Warna ini diterapkan secara konsisten pada AppBar, DrawerHeader, dan tombol utama (ElevatedButton) melalui ThemeData di MaterialApp, sehingga seluruh halaman terasa seragam dan memiliki identitas brand yang kuat.
+ThemeData adalah theme global Flutter — ia mendefinisikan warna, font, bentuk tombol, ikon, dan elemen UI lain untuk seluruh aplikasi.
+Semua widget bawaan seperti AppBar, FloatingActionButton, ElevatedButton, dan TextFormField otomatis mengikuti nilai di ThemeData tanpa perlu diatur manual satu per satu.
+
+Contohnya:
+
+- Semua AppBar otomatis menggunakan warna dari primarySwatch: Colors.blue.
+
+- Tombol seperti ElevatedButton atau FloatingActionButton menggunakan warna primary dan secondary sesuai yang kamu definisikan.
+
+Kemudian ColorScheme membuat warna menjadi konsisten. Kodenya:
+```dart
+colorScheme: ColorScheme.fromSwatch(
+  primarySwatch: Colors.blue,
+).copyWith(secondary: Colors.blueAccent[400]),
+```
+
+Hal tersebut menandakan bahwa telah ditetapkan warna utama (primary) → Colors.blue
+Digunakan untuk AppBar, tombol utama, dan highlight elemen.
+
+Menetapkan warna sekunder (secondary) → Colors.blueAccent[400]
+Digunakan untuk aksen seperti ikon aktif, progress bar, dan efek fokus.
+
+Jadi, seluruh komponen UI yang menggunakan “warna tema” otomatis sinkron dengan dua warna utama ini.
+Tidak perlu lagi memanggil Colors.blue secara manual di setiap widget.
+
+Kemudian, pada bagian implementasinya:
+Setiap halaman (menu.dart, productlist_form.dart, dsb.) menggunakan struktur Scaffold dan AppBar.
+Karena AppBar tidak diberikan warna manual (backgroundColor:), Flutter otomatis mengambil warna dari tema global (Theme.of(context).colorScheme.primary).
+Hal ini memastikan bahwa:
+
+- Semua halaman memiliki warna biru yang sama pada AppBar.
+
+- Semua tombol (ElevatedButton) memiliki warna biru yang sama juga.
+
