@@ -304,3 +304,165 @@ Hal ini memastikan bahwa:
 
 - Semua tombol (ElevatedButton) memiliki warna biru yang sama juga.
 
+# Tugas 9
+
+## 1. Perlunya Membuat Model Dart untuk JSON
+
+Saat Flutter menerima atau mengirim data ke Django, datanya berbentuk JSON. Dibuatlah sebuah model Dart agar JSON tersebut dapat diterjemahkan menjadi objek dengan tipe data yang jelas, aman, dan mudah digunakan. Jika langsung memakai **Map<String, dynamic>**, maka akan kehilangan validasi tipe, berpotensi salah akses key, dan sulit melakukan refactor.
+
+Contoh model Dart:
+```dart
+class Product {
+  final int id;
+  final String name;
+
+  Product({required this.id, required this.name});
+
+  factory Product.fromJson(Map<String, dynamic> json) {
+    return Product(
+      id: json['id'],
+      name: json['name'],
+    );
+  }
+}
+```
+Tanpa model:
+
+```dart
+// raw map - tidak aman
+var name = data["nama"]; // JSON tidak punya key "nama" → error runtime
+```
+
+Model menjaga konsistensi, null-safety, dan memudahkan maintainability.
+
+## 2. Fungsi Package http dan CookieRequest
+
+Package http digunakan untuk melakukan permintaan HTTP biasa, tanpa menyimpan sesi atau cookie. Ini cocok untuk endpoint publik seperti GET daftar item.
+
+Sedangkan CookieRequest (dari pbp_django_auth) menangani request yang membutuhkan autentikasi, karena otomatis menyimpan dan mengirim cookie Django (sessionid).
+
+Perbedaannya secara singkat:
+
+- http → stateless request, tidak menyimpan sesi.
+
+- CookieRequest → stateful request, menyimpan cookie login.
+
+Contoh:
+
+``` dart
+final request = context.watch<CookieRequest>();
+var response = await request.login("http://.../auth/login/", {
+  "username": "user",
+  "password": "pass",
+});
+```
+
+## 3. Alasan CookieRequest Harus Dibagikan ke Semua Komponen Flutter
+
+Karena status login pengguna tersimpan dalam CookieRequest, seluruh halaman yang membutuhkan autentikasi harus mengakses instance yang sama. Jika setiap widget membuat instance baru, cookie login akan hilang, pengguna dianggap belum login, dan permintaan ke Django akan ditolak.
+
+Provider membuat CookieRequest dapat diakses global:
+
+``` dart
+return Provider(
+  create: (_) => CookieRequest(),
+  child: MyApp(),
+);
+```
+
+## 4. Konfigurasi Konektivitas antara Flutter dan Django
+
+Untuk Flutter dapat berkomunikasi dengan Django, beberapa konfigurasi wajib dilakukan, antara lain:
+
+- Menambahkan 10.0.2.2 di ALLOWED_HOSTS:
+- - Emulator Android menerjemahkan localhost → 10.0.2.2.
+- - Tanpa ini, Django akan menolak request.
+
+- Aktifkan CORS
+- - Agar Flutter (mobile/localhost) diizinkan mengakses Django API.
+
+- Atur cookie dan SameSite
+- - Cookie autentikasi Django harus bisa dikirim ke Flutter:
+
+```python
+SESSION_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_SECURE = True
+```
+
+- Tambahkan internet permission di Android
+- - Pada AndroidManifest.xml:
+
+``` html
+<uses-permission android:name="android.permission.INTERNET"/>
+```
+
+Jika salah satu bagian tidak dikonfigurasi, maka:
+
+- Flutter tidak bisa login
+
+- request ditolak Django (CORS error / forbidden host)
+
+- cookie tidak tersimpan
+
+- API tidak bisa diakses sama sekali
+
+## 5. Mekanisme Pengiriman Data dari Input ke Django ke Flutter
+
+Alur data:
+
+- Pengguna mengisi form pada Flutter.
+
+- Flutter mengirim data ke Django melalui http atau CookieRequest.
+
+- Django memproses data (validasi, simpan ke database).
+
+- Django mengembalikan response JSON.
+
+- Flutter menerima JSON dan memparsingnya menggunakan model Dart.
+
+- Data tampil pada UI dalam bentuk list, card, detail produk, dll.
+
+Contoh pengiriman data:
+
+``` dart
+await request.postJson("http://.../create/",
+{
+  "name": nameController.text,
+  "price": priceController.text,
+});
+```
+
+## 6. Mekanisme Autentikasi: Login, Register, Logout
+
+### Login
+Flutter mengirim username & password ke Django:
+
+``` dart
+var response = await request.login("http://.../login/", {
+  "username": "myuser",
+  "password": "mypass",
+});
+```
+
+Django memverifikasi akun dan mengembalikan cookie sessionid.
+CookieRequest menyimpan sessionid sehingga Flutter dianggap login.
+
+### Register
+Flutter mengirim data akun, lalu Django membuat user baru.
+Setelah sukses, pengguna dapat login melalui endpoint login Django.
+
+Akses halaman yang butuh autentikasi
+Setiap request selanjutnya otomatis menyertakan cookie login.
+
+### Logout
+Flutter memanggil:
+
+```dart
+await request.logout("http://.../logout/");
+```
+
+Django menghapus session, dan CookieRequest membersihkan cookie lokal.
+
+Jika autentikasi berhasil, Flutter menampilkan menu utama dan semua fitur yang hanya dapat diakses oleh user login.
+
+### Langkah Implementasi Checklist
