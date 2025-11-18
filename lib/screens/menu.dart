@@ -13,6 +13,7 @@ class MyHomePage extends StatelessWidget {
     ItemHomepage("All Products", Icons.store),
     ItemHomepage("My Products", Icons.inventory),
     ItemHomepage("Create Product", Icons.add_shopping_cart),
+    ItemHomepage("Logout", Icons.logout),
   ];
 
   @override
@@ -59,7 +60,7 @@ class MyHomePage extends StatelessWidget {
                     padding: const EdgeInsets.all(20),
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
-                    crossAxisCount: 3,
+                    crossAxisCount: 4,
                     shrinkWrap: true,
                     children: items.map((ItemHomepage item) {
                       return ItemCard(item);

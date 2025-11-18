@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:efootball_shop/widgets/left_drawer.dart';
+import 'dart:convert';
+import 'package:provider/provider.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:efootball_shop/screens/menu.dart';
 
 class ProductFormPage extends StatefulWidget {
   const ProductFormPage({super.key});
@@ -16,8 +20,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
   String _description = "";
   String _category = "Jersey"; // default
   String _thumbnail = "";
-  int stock = 0;
-  double rating = 0.0;
+  int _stock = 0;
+  double _rating = 0.0;
   bool _isFeatured = false; // default
 
   // Daftar kategori
@@ -32,6 +36,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
     return Scaffold(
       appBar: AppBar(
         title: const Center(
@@ -186,7 +191,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   ),
                   onChanged: (valueStock) {
                     setState(() {
-                      stock = int.tryParse(valueStock) ?? 0;
+                      _stock = int.tryParse(valueStock) ?? 0;
                     });
                   },
                   validator: (valueStock) {
@@ -217,7 +222,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   ),
                   onChanged: (valueRating) {
                     setState(() {
-                      rating = double.tryParse(valueRating) ?? 0.0;
+                      _rating = double.tryParse(valueRating) ?? 0.0;
                     });
                   },
                   validator: (valueRating) {
@@ -254,41 +259,44 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title:
-                                const Text('Product Successfully Added! 🎉'),
-                            content: SingleChildScrollView(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text("Name: $_name"),
-                                  Text("Price: Rp $_price"),
-                                  Text("Description: $_description"),
-                                  Text("Category: $_category"),
-                                  Text("Thumbnail: $_thumbnail"),
-                                  Text("Stock: $stock"),
-                                  Text("Rating: $rating"),
-                                  Text("Featured: ${_isFeatured ? "Yes" : "No"}"),
-                                ],
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: const Text("OK"),
-                              ),
-                            ],
-                          );
-                        },
+                      
+                      final response = await request.postJson(
+                        "http://127.0.0.1:8000/create-flutter/",
+                        jsonEncode({
+                          "name": _name,
+                          "price": _price,
+                          "description": _description,
+                          "thumbnail": _thumbnail,
+                          "category": _category,
+                          "is_featured": _isFeatured,
+                          "stock": _stock,
+                          "rating": _rating,
+                        }),
                       );
-                      _formKey.currentState!.reset();
+
+                      if (context.mounted) {
+                        if (response['status'] == 'success') {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Product successfully saved!"),
+                            ),
+                          );
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MyHomePage(),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Something went wrong, please try again."),
+                            ),
+                          );
+                        }
+                      }
                     }
                   },
                   child: const Text(
