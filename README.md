@@ -465,4 +465,212 @@ Django menghapus session, dan CookieRequest membersihkan cookie lokal.
 
 Jika autentikasi berhasil, Flutter menampilkan menu utama dan semua fitur yang hanya dapat diakses oleh user login.
 
-### Langkah Implementasi Checklist
+## 7. Langkah Implementasi Checklist
+### 1. Memastikan deployment Django berjalan (testing lokal)
+
+Bertujuan agar server Django harus reachable oleh emulator/device.
+
+Pertama-tama, coba untuk menjalankan server:
+
+```shell
+python manage.py runserver
+```
+
+Akses http://127.0.0.1:8000/ di browser host, dan memastikan halaman muncul.
+
+### 2. (Django) Implementasikan model produk & API JSON
+
+Bertujuan sehingga model Django yang merepresentasikan produk + endpoint JSON untuk all/my products + create via JSON.
+
+Model:
+
+``` python
+from django.db import models
+from django.contrib.auth.models import User
+import uuid
+
+class Product(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=200)
+    price = models.IntegerField()
+    description = models.TextField()
+    thumbnail = models.URLField(blank=True)
+    category = models.CharField(max_length=100)
+    is_featured = models.BooleanField(default=False)
+    stock = models.IntegerField(default=0)
+    rating = models.FloatField(default=0.0)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+```
+
+Views (JSON endpoints):
+```python
+from django.http import JsonResponse
+from main.models import Product
+
+def get_all_products(request):
+    qs = Product.objects.all()
+    data = [ { 'id': str(p.id), 'name': p.name, ... } for p in qs ]
+    return JsonResponse(data, safe=False)
+
+def get_my_products(request):
+    user = request.user
+    qs = Product.objects.filter(user=user)
+    data = [ { ... } for p in qs ]
+    return JsonResponse(data, safe=False)
+
+@csrf_exempt
+def create_product_flutter(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        p = Product.objects.create(
+            name=data['name'], price=data['price'], description=data['description'],
+            thumbnail=data.get('thumbnail',''), category=data['category'],
+            is_featured=data.get('is_featured', False), stock=data.get('stock',0),
+            rating=data.get('rating',0), user=request.user if request.user.is_authenticated else None
+        )
+        return JsonResponse({'status':'success','id': str(p.id)})
+    return JsonResponse({'status':'error'}, status=400)
+```
+
+URLs:
+```python
+path('all-products/', get_all_products),
+path('my-products/', get_my_products),
+path('product/create-flutter/', create_product_flutter),
+```
+
+Dibuat pula sehingga get_my_products dapat memfilter berdasarkan request.user agar aman.
+
+### 3. (Django) Konfigurasi CORS / cookie / ALLOWED_HOSTS
+
+Bertujuan agar session/cookie dapat dikirim antar origin dan emulator dapat mengakses server.
+
+Menambahkan di settings.py:
+
+```python
+INSTALLED_APPS += ['corsheaders']
+MIDDLEWARE = ['corsheaders.middleware.CorsMiddleware', ...] + MIDDLEWARE
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = False  # dev; untuk production harus True+HTTPS
+SESSION_COOKIE_SECURE = False
+ALLOWED_HOSTS = ['127.0.0.1','localhost','10.0.2.2']
+```
+
+### 4. (Flutter) Setup global CookieRequest & Provider
+
+Bertujuan agar session (cookie) manajemen ter-shared di seluruh widget.
+
+Pada main.dart:
+
+```dart
+void main() {
+  runApp(
+    Provider(
+      create: (_) => CookieRequest(),
+      child: MyApp(),
+    ),
+  );
+}
+```
+
+Tujuannya supaya setiap widget dapat context.watch<CookieRequest>() untuk melakukan request autentikasi/CRUD tanpa kehilangan session. Package pbp_django_auth menangani penyimpanan cookie/session. 
+
+### 5. (Flutter) Buat model Dart product_entry.dart
+
+Tujuannya untuk type-safety, parsing JSON → object, toJson untuk mengirim data.
+
+Contoh (singkat):
+
+```dart
+class ProductEntry {
+  final String id;
+  final String name;
+  final int price;
+  final String description;
+  final String thumbnail;
+  final String category;
+  final bool isFeatured;
+  final int stock;
+  final double rating;
+  final int userId;
+
+  ProductEntry({...});
+
+  factory ProductEntry.fromJson(Map<String,dynamic> json) => ProductEntry(
+    id: json['id'],
+    name: json['name'],
+    price: json['price'],
+    description: json['description'],
+    thumbnail: json['thumbnail'] ?? '',
+    category: json['category'],
+    isFeatured: json['is_featured'],
+    stock: json['stock'],
+    rating: (json['rating'] ?? 0).toDouble(),
+    userId: json['user_id'] ?? 0,
+  );
+
+  Map<String,dynamic> toJson() => { ... };
+}
+```
+
+Alasan menggunakan models adalah untuk menghindari runtime error akibat key missing / wrong type; memudahkan refactor.
+
+### 6. (Flutter) Implement halaman daftar (All / My) dan filter toggle
+
+ProductEntryListPage (stateful):
+
+```dart
+state bool _showMyProducts.
+
+fetchProducts memilih URL:
+
+final url = _showMyProducts ? 'http://10.0.2.2:8000/my-products/' : 'http://10.0.2.2:8000/all-products/';
+final response = await request.get(url);
+```
+
+Tombol toggle (ChoiceChip / ToggleButtons / AppBar actions) yang setState() dan memicu refetch.
+
+Menggunakan FutureBuilder + parsing ke ProductEntry model.
+
+### 7. (Flutter) Implement halaman detail
+
+ProductDetailPage menerima ProductEntry product dari navigator push. Kemudian, menampilkan seluruh atribut (name, price, category, stock, rating, thumbnail, description, isFeatured). Saya juga menyertakan tombol back (AppBar otomatis menyediakan back jika push via Navigator.push).
+
+Kode:
+```dart
+Navigator.push(context, MaterialPageRoute(builder: (_) => ProductDetailPage(product: product)));
+```
+
+### 8. (Flutter) Implement form create product (POST JSON)
+
+Form: validasi name/price/stock/rating. Saat submit:
+
+```dart
+final response = await request.postJson(
+  'http://10.0.2.2:8000/product/create-flutter/',
+  jsonEncode(product.toJson())
+);
+if (response['status'] == 'success') { /* show snack + navigate */ }
+```
+
+### 9. (Flutter) Implement register/login/logout flows
+
+#### Register (Flutter) ke Django
+
+Form register melakukan request.postJson('http://10.0.2.2:8000/register/', jsonEncode({...})), menggunakan endpoints.
+
+Django UserCreationForm membuat user dan mereturn JSON success.
+
+#### Login (Flutter) ke Django
+
+Menggunakan request.login(url, {'username':..., 'password':...}) (pbp_django_auth helper).
+
+Saat berhasil, Django menyetel sessionid cookie and CookieRequest menyimpannya. Subsequent request.get/postJson mempertahankan session.
+
+#### Logout
+
+Menunggu request.logout('http://10.0.2.2:8000/logout/'), kemudian Django logout + cookie dihapus.
